@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AudioInput</string>
+    <string name="record_voice">Record Voice</string>
+    <string name="view_transcription">View Transcription</string>
 </resources>
