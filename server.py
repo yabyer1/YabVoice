@@ -19,4 +19,4 @@ if __name__ == "__main__":
     app.run(port=8080)
 
 #command :  curl http://127.0.0.1:8080/transcribe \ -H "Content-Type: multipart/form-data" \ -F file=@./samples/jfk.wav -F response-format="json" | jq
-#change file to whatever when the time comes 
+#change file to whatever when the time comes

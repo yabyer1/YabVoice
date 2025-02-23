@@ -68,4 +68,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.okhttp) // Use the latest version
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.material)
+
 }

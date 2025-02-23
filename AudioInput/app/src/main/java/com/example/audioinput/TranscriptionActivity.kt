@@ -16,18 +16,29 @@ import java.io.IOException
 
 class TranscriptionActivity : AppCompatActivity() {
     private lateinit var transcriptionTextView: TextView
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transcription)
-        transcriptionTextView = findViewById(R.id.tvTranscription)
+        val transcriptionTextView : TextView = findViewById(R.id.tvTranscription)
         val audioFilePath = intent.getStringExtra("audioFilePath")
         if (audioFilePath != null) {
-            sendAudiotoServer(audioFilePath)
+            sendAudiotoServer(audioFilePath, transcriptionTextView)
+        }
+        else{
+            transcriptionTextView.text = "No audio file path provided"
         }
     }
 
-    private fun sendAudiotoServer(audioFilePath: String) {
+    @SuppressLint("SetTextI18n")
+    private fun sendAudiotoServer(audioFilePath: String, transcriptionTextView: TextView) {
         val file = File(audioFilePath)
+        if (!file.exists()) {
+            transcriptionTextView.text = "Audio file not found"
+
+            return
+        }
+        val client = OkHttpClient()
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart(
@@ -37,10 +48,10 @@ class TranscriptionActivity : AppCompatActivity() {
             )
             .build()
         val request = Request.Builder()
-            .url("http://127.0.0.1:8080/transcribe")
+            .url("http://10.0.2.2:8080/transcribe")
             .post(requestBody)
             .build()
-        val client = OkHttpClient()
+
         client.newCall(request).enqueue(object : Callback {
             @SuppressLint("SetTextI18n")
             override fun onFailure(call: Call, e: IOException) {

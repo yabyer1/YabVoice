@@ -9,58 +9,72 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class RecordingActivity : AppCompatActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFilePath: String = ""
-    fun OnCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recording)
-        val recordButton : Button = findViewById(R.id.btnStartRecording)
-        recordButton.setOnClickListener{
-            if(mediaRecorder == null){
+        val recordButton: Button = findViewById(R.id.btnStartRecording)
+        val stopButton: Button = findViewById(R.id.btnStopRecording)
+        recordButton.setOnClickListener {
                 startRecording()
-            }else{
-                stopRecording()
-                val intent = Intent(this, TranscriptionActivity::class.java).apply{
-                    putExtra("audioFilePath", audioFilePath)
-                }
-                startActivity(intent)
-            }
+        }
+        stopButton.setOnClickListener {
+            stopRecording()
         }
     }
 
 
-
     private fun stopRecording() {
-        mediaRecorder?.apply{
+        mediaRecorder?.apply {
             stop()
             release()
 
         }
         mediaRecorder = null
         Toast.makeText(this, "Recording saved!...", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, TranscriptionActivity::class.java)
+        intent.putExtra("audioFilePath", audioFilePath)
+        startActivity(intent)
     }
 
     private fun startRecording() {
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO) , 200)
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 200)
             return
         }
-        audioFilePath = "${externalCacheDir?.absolutePath}/recorded_audio.wav"
-        mediaRecorder = MediaRecorder().apply{
+        val savedAudioDir = File(getExternalFilesDir(null), "saved_audio")
+        if (!savedAudioDir.exists()) {
+            savedAudioDir.mkdirs()
+        }
+        val timeStamp : String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(
+            java.util.Date()
+        )
+        audioFilePath = "${savedAudioDir.absolutePath}/recording_$timeStamp.wav}"
+        mediaRecorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
             setOutputFile(audioFilePath)
-            try{
+            try {
                 prepare()
-            }catch(e: Exception){
-
+                start()
+                Toast.makeText(this@RecordingActivity, "Recording started...", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@RecordingActivity, "Failed to start recording", Toast.LENGTH_SHORT).show()
             }
-            start()
+
         }
-        Toast.makeText(this, "Recording started...", Toast.LENGTH_SHORT).show()
 
     }
 }
