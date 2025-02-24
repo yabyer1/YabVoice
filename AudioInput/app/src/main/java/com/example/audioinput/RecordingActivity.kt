@@ -16,31 +16,16 @@ import java.util.Locale
 class RecordingActivity : AppCompatActivity() {
     private var mediaRecorder: MediaRecorder? = null
     private var audioFilePath: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recording)
+
         val recordButton: Button = findViewById(R.id.btnStartRecording)
         val stopButton: Button = findViewById(R.id.btnStopRecording)
-        recordButton.setOnClickListener {
-                startRecording()
-        }
-        stopButton.setOnClickListener {
-            stopRecording()
-        }
-    }
 
-
-    private fun stopRecording() {
-        mediaRecorder?.apply {
-            stop()
-            release()
-
-        }
-        mediaRecorder = null
-        Toast.makeText(this, "Recording saved!...", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this, TranscriptionActivity::class.java)
-        intent.putExtra("audioFilePath", audioFilePath)
-        startActivity(intent)
+        recordButton.setOnClickListener { startRecording() }
+        stopButton.setOnClickListener { stopRecording() }
     }
 
     private fun startRecording() {
@@ -52,19 +37,23 @@ class RecordingActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 200)
             return
         }
+
         val savedAudioDir = File(getExternalFilesDir(null), "saved_audio")
         if (!savedAudioDir.exists()) {
             savedAudioDir.mkdirs()
         }
-        val timeStamp : String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(
+
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(
             java.util.Date()
         )
-        audioFilePath = "${savedAudioDir.absolutePath}/recording_$timeStamp.wav}"
+        audioFilePath = "${savedAudioDir.absolutePath}/recording_$timeStamp.wav"  // Fixed incorrect path
+        Toast.makeText(this, "Saving file at: $audioFilePath", Toast.LENGTH_LONG).show()
+        println("DEBUG: Audio file path -> $audioFilePath")
         mediaRecorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            setOutputFile(audioFilePath)
+            setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setOutputFile(audioFilePath)  // Ensure file path is used
             try {
                 prepare()
                 start()
@@ -73,8 +62,24 @@ class RecordingActivity : AppCompatActivity() {
                 e.printStackTrace()
                 Toast.makeText(this@RecordingActivity, "Failed to start recording", Toast.LENGTH_SHORT).show()
             }
-
         }
+    }
 
+    private fun stopRecording() {
+        mediaRecorder?.apply {
+            stop()
+            release()
+        }
+        mediaRecorder = null
+
+        if (audioFilePath.isNotEmpty()) {
+            Toast.makeText(this, "Recording saved at: $audioFilePath", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, TranscriptionActivity::class.java).apply {
+                putExtra("audioFilePath", audioFilePath)  // Ensure correct file path is passed
+            }
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "Recording file path is invalid", Toast.LENGTH_SHORT).show()
+        }
     }
 }

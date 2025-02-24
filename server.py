@@ -13,6 +13,7 @@ def transcribe():
     segments, _ = model.transcribe(audio_file)
 
     transcription = " ".join([segment.text for segment in segments])
+    print(transcription)
     return jsonify({"transcription": transcription})
 
 if __name__ == "__main__":
